@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>DuoPlay - Games & Chat for Two</title>
+<title>DuoPlay - Live Games & Chat for Two</title>
 <style>
   :root { --bg:#0d0e14; --card:#181a24; --pink:#ff4d79; --cyan:#00e5ff; --gold:#ffd700; --text:#ffffff; }
   * { box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; -webkit-tap-highlight-color:transparent; }
@@ -11,9 +11,11 @@
   header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#151720; border-bottom:1px solid #242736; }
   .brand { font-size:20px; font-weight:800; background:linear-gradient(90deg,var(--pink),var(--cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
   .wallet { background:rgba(255,215,0,0.12); border:1px solid rgba(255,215,0,0.45); padding:6px 12px; border-radius:20px; font-weight:700; font-size:13px; color:var(--gold); cursor:pointer; }
-  .room-bar { background:#141620; padding:8px 16px; display:flex; justify-content:space-between; align-items:center; font-size:12px; border-bottom:1px solid #202330; }
-  .room-code { background:#222536; padding:4px 10px; border-radius:8px; font-family:monospace; font-weight:bold; color:var(--cyan); }
-  .invite-btn { background:linear-gradient(90deg,var(--pink),#ff758c); border:none; color:#fff; padding:6px 12px; border-radius:12px; font-weight:600; font-size:12px; cursor:pointer; }
+  .room-bar { background:#141620; padding:8px 14px; display:flex; justify-content:space-between; align-items:center; font-size:12px; border-bottom:1px solid #202330; gap:6px; }
+  .room-code { background:#222536; padding:4px 8px; border-radius:8px; font-family:monospace; font-weight:bold; color:var(--cyan); }
+  .btn-sm { border:none; color:#fff; padding:6px 10px; border-radius:10px; font-weight:700; font-size:11px; cursor:pointer; }
+  .invite-btn { background:linear-gradient(90deg,#25D366,#128C7E); }
+  .join-btn { background:#2a2e42; }
   main { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:12px; }
   .game-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .game-card { background:linear-gradient(145deg,#1d202e,#151722); border:1px solid #2a2e42; border-radius:18px; padding:15px; box-shadow:0 8px 18px rgba(0,0,0,0.45); cursor:pointer; position:relative; }
@@ -45,10 +47,10 @@
   .ludo-tile.goal { background:linear-gradient(135deg,var(--pink),var(--cyan)); color:#000; }
   .dice-box { width:56px; height:56px; border-radius:14px; background:#fff; color:#111; display:flex; align-items:center; justify-content:center; font-size:28px; cursor:pointer; transition:transform 0.2s; }
   .dice-spin { transform:rotate(360deg) scale(1.12); }
-  .chat-box { height:180px; background:#13151e; border-top:1px solid #26293b; display:flex; flex-direction:column; padding:8px 14px; }
+  .chat-box { height:185px; background:#13151e; border-top:1px solid #26293b; display:flex; flex-direction:column; padding:8px 14px; }
   .chat-header { font-size:11px; color:#8c92ac; margin-bottom:5px; display:flex; justify-content:space-between; }
   .messages { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px; }
-  .msg { max-width:78%; padding:7px 12px; border-radius:14px; font-size:13px; }
+  .msg { max-width:78%; padding:7px 12px; border-radius:14px; font-size:13px; word-break:break-word; }
   .msg.me { align-self:flex-end; background:var(--pink); color:#fff; }
   .msg.partner { align-self:flex-start; background:#232636; color:#e2e6f5; }
   .chat-input-row { display:flex; gap:8px; margin-top:6px; }
@@ -62,31 +64,34 @@
   <div class="wallet" onclick="watchAdReward()">🪙 <span id="coins">1,000</span> +AD</div>
 </header>
 <div class="room-bar">
-  <div>Room: <span class="room-code" id="roomCode">#DUO-842</span></div>
-  <button class="invite-btn" onclick="invitePartner()">Invite Partner 💌</button>
+  <div>Room: <span class="room-code" id="roomCode">----</span> <span id="roleTag" style="color:#ffd700;font-weight:700;"></span></div>
+  <div style="display:flex;gap:6px;">
+    <button class="btn-sm join-btn" onclick="joinManualRoom()">Join</button>
+    <button class="btn-sm invite-btn" onclick="inviteWhatsApp()">WhatsApp 💌</button>
+  </div>
 </div>
 <main>
   <div id="lobby-view">
     <div class="game-grid">
-      <div class="game-card" onclick="openPanel('ludo-panel');initLudo();"><span class="badge" style="background:var(--gold);color:#000;">HOT</span><div class="game-icon">🎲</div><div class="game-title">Royal Ludo</div><div class="game-desc">Race to Crown +250 🪙</div></div>
-      <div class="game-card" onclick="openPanel('sync-panel');nextSyncQ();"><span class="badge">COUPLES</span><div class="game-icon">💘</div><div class="game-title">Couple Sync</div><div class="game-desc">Match answers +100 🪙</div></div>
-      <div class="game-card" onclick="openPanel('ttt-panel');resetBoard();"><div class="game-icon">❌⭕</div><div class="game-title">Heart vs Bolt</div><div class="game-desc">Quick duel +150 🪙</div></div>
+      <div class="game-card" onclick="openPanel('ludo-panel');initLudo(true);"><span class="badge" style="background:var(--gold);color:#000;">2P LIVE</span><div class="game-icon">🎲</div><div class="game-title">Royal Ludo</div><div class="game-desc">Live 2-Phone Race +250 🪙</div></div>
+      <div class="game-card" onclick="openPanel('ttt-panel');resetBoard(true);"><span class="badge">2P LIVE</span><div class="game-icon">❌⭕</div><div class="game-title">Heart vs Bolt</div><div class="game-desc">Live 2-Phone Duel +150 🪙</div></div>
+      <div class="game-card" onclick="openPanel('sync-panel');restartSync();"><span class="badge">COUPLES</span><div class="game-icon">💘</div><div class="game-title">Couple Sync</div><div class="game-desc">25 Questions +300 🪙</div></div>
       <div class="game-card" onclick="openPanel('dab-panel');initDAB();"><div class="game-icon">🟦</div><div class="game-title">Dots & Boxes</div><div class="game-desc">Capture boxes +200 🪙</div></div>
     </div>
   </div>
   <div id="ludo-panel" class="game-panel">
-    <div class="top-row"><button class="back-btn" onclick="showLobby()">← Lobby</button><div id="ludo-status" style="font-size:12px;font-weight:700;color:var(--gold);">Tap Dice!</div><button class="reset-btn" onclick="initLudo()">↻ Reset</button></div>
+    <div class="top-row"><button class="back-btn" onclick="showLobby()">← Lobby</button><div id="ludo-status" style="font-size:12px;font-weight:700;color:var(--gold);">Tap Dice!</div><button class="reset-btn" onclick="initLudo(true)">↻ Reset</button></div>
     <div class="ludo-track" id="ludo-track"></div>
-    <div style="display:flex;align-items:center;gap:14px;"><div class="dice-box" id="dice-box" onclick="rollLudo()">🎲</div><div style="font-size:11px;color:#9aa0b8;">❤️ You: <b id="p1-pos" style="color:#fff;">0</b>/21 | ⚡ Partner: <b id="p2-pos" style="color:#fff;">0</b>/21<br>⭐ Safe tiles protect you!</div></div>
-  </div>
-  <div id="sync-panel" class="game-panel">
-    <div class="top-row"><button class="back-btn" onclick="showLobby()">← Lobby</button><span style="font-size:12px;color:var(--gold);">+100 🪙 on Match</span></div>
-    <div class="sync-card"><div class="sync-q" id="sync-question">Loading...</div><div class="sync-btns"><button class="sync-opt" style="background:var(--pink);color:#fff;" onclick="answerSync('ME')">🙋‍♂️ Me</button><button class="sync-opt" style="background:var(--cyan);color:#000;" onclick="answerSync('PARTNER')">👉 Partner</button></div></div>
+    <div style="display:flex;align-items:center;gap:14px;"><div class="dice-box" id="dice-box" onclick="rollLudo()">🎲</div><div style="font-size:11px;color:#9aa0b8;">❤️ Host: <b id="p1-pos" style="color:#fff;">0</b>/21 | ⚡ Guest: <b id="p2-pos" style="color:#fff;">0</b>/21<br>⭐ Safe tiles protect you!</div></div>
   </div>
   <div id="ttt-panel" class="game-panel">
-    <div class="top-row"><button class="back-btn" onclick="showLobby()">← Lobby</button><button class="reset-btn" onclick="resetBoard()">↻ Restart</button></div>
-    <div id="turn-status" style="font-weight:700;font-size:14px;color:var(--cyan);">Your Turn (❤️)</div>
+    <div class="top-row"><button class="back-btn" onclick="showLobby()">← Lobby</button><button class="reset-btn" onclick="resetBoard(true)">↻ Restart</button></div>
+    <div id="turn-status" style="font-weight:700;font-size:14px;color:var(--cyan);">Host Turn (❤️)</div>
     <div class="board" id="board"></div>
+  </div>
+  <div id="sync-panel" class="game-panel">
+    <div class="top-row"><button class="back-btn" onclick="showLobby()">← Lobby</button><span style="font-size:12px;color:var(--gold);">10-Q Round</span></div>
+    <div class="sync-card"><div class="sync-q" id="sync-question">Loading...</div><div class="sync-btns"><button class="sync-opt" style="background:var(--pink);color:#fff;" onclick="answerSync('ME')">🙋‍♂️ Me</button><button class="sync-opt" style="background:var(--cyan);color:#000;" onclick="answerSync('PARTNER')">👉 Partner</button></div></div>
   </div>
   <div id="dab-panel" class="game-panel">
     <div class="top-row"><button class="back-btn" onclick="showLobby()">← Lobby</button><div id="dab-score" style="font-size:13px;font-weight:700;">❤️ 0 — 0 ⚡</div><button class="reset-btn" onclick="initDAB()">↻ New</button></div>
@@ -94,238 +99,13 @@
   </div>
 </main>
 <div class="chat-box">
-  <div class="chat-header"><span>💬 Private Duo Chat</span><span style="color:#4ade80;">● Partner Online</span></div>
-  <div class="messages" id="messages"><div class="msg partner">Royal Ludo is live! Roll the dice 👑❤️</div></div>
-  <div class="chat-input-row"><input type="text" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendMsg()"><button class="send-btn" onclick="sendMsg()">➤</button></div>
+  <div class="chat-header"><span>💬 Live Room Chat</span><span id="connStatus" style="color:#4ade80;">● Connected</span></div>
+  <div class="messages" id="messages"></div>
+  <div class="chat-input-row"><input type="text" id="chatInput" placeholder="Message your partner live..." onkeypress="if(event.key==='Enter')sendMsg()"><button class="send-btn" onclick="sendMsg()">➤</button></div>
 </div>
-  <script>
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playTone(f, t, d) {
-  try {
-    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.type = t; o.frequency.value = f; g.gain.setValueAtTime(0.12, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
-    o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d);
-  } catch(e) {}
-}
 
-let coins = 1000;
-function updateCoins(amt) {
-  coins += amt; document.getElementById('coins').innerText = coins.toLocaleString();
-  if (amt > 0) { playTone(660,'sine',0.15); setTimeout(()=>playTone(880,'sine',0.25),120); }
-}
-function watchAdReward() { alert("🎬 Ad Watched! +500 Gold Coins added."); updateCoins(500); }
-function invitePartner() { alert("Room Code: " + document.getElementById('roomCode').innerText); }
-
-function sendMsg() {
-  const inp = document.getElementById('chatInput'), txt = inp.value.trim();
-  if (!txt) return;
-  playTone(440,'sine',0.08); addMessage(txt,'me'); inp.value = '';
-  setTimeout(() => {
-    const r = ["No way you rolled that! 😂🎲","Catching up to you! 🔥","❤️❤️❤️","Your move! 😄"];
-    playTone(540,'sine',0.08); addMessage(r[Math.floor(Math.random()*r.length)],'partner');
-  }, 850);
-}
-function addMessage(txt, who) {
-  const b = document.getElementById('messages'), d = document.createElement('div');
-  d.className = 'msg ' + who; d.innerText = txt; b.appendChild(d); b.scrollTop = b.scrollHeight;
-}
-function openPanel(id) {
-  playTone(500,'triangle',0.07); document.getElementById('lobby-view').style.display = 'none';
-  document.querySelectorAll('.game-panel').forEach(p => p.style.display = 'none');
-  document.getElementById(id).style.display = 'flex';
-}
-function showLobby() {
-  playTone(380,'triangle',0.07); document.querySelectorAll('.game-panel').forEach(p => p.style.display = 'none');
-  document.getElementById('lobby-view').style.display = 'block';
-}
-
-// 1. ROYAL LUDO
-let p1 = 0, p2 = 0, ludoTurn = 'ME', ludoOver = false;
-const safeTiles = '4,9,14,19'.split(',').map(Number);
-const diceFaces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
-function initLudo() {
-  p1 = 0; p2 = 0; ludoTurn = 'ME'; ludoOver = false;
-  document.getElementById('dice-box').innerText = '🎲';
-  document.getElementById('ludo-status').innerText = 'Your Turn! Tap Dice'; renderLudo();
-}
-function renderLudo() {
-  document.getElementById('p1-pos').innerText = p1; document.getElementById('p2-pos').innerText = p2;
-  const tr = document.getElementById('ludo-track'); tr.innerHTML = '';
-  for (let i = 1; i <= 21; i++) {
-    const t = document.createElement('div');
-    t.className = 'ludo-tile' + (safeTiles.includes(i)?' safe':'') + (i===21?' goal':'');
-    t.innerText = i===21?'👑':(p1===i&&p2===i?'❤️⚡':(p1===i?'❤️':(p2===i?'⚡':(safeTiles.includes(i)?'⭐':i))));
-    tr.appendChild(t);
-  }
-}
-function rollLudo() {
-  if (ludoTurn !== 'ME' || ludoOver) return;
-  ludoTurn = 'WAIT'; const d = document.getElementById('dice-box'); d.classList.add('dice-spin'); playTone(700,'square',0.08);
-  setTimeout(() => {
-    d.classList.remove('dice-spin'); const r = Math.floor(Math.random()*6)+1; d.innerText = diceFaces[r-1];
-    if (p1 + r <= 21) p1 += r;
-    if (p1 === p2 && p1 < 21 && !safeTiles.includes(p1)) { p2 = 0; addMessage("💥 Captured your token! Back to 0 😂","me"); }
-    renderLudo();
-    if (p1 === 21) { document.getElementById('ludo-status').innerText = '👑 Won +250 Coins!'; updateCoins(250); ludoOver = true; return; }
-    if (r === 6) { ludoTurn = 'ME'; document.getElementById('ludo-status').innerText = 'Rolled 6! Roll Again 🎲'; }
-    else { document.getElementById('ludo-status').innerText = 'Partner rolling...'; setTimeout(aiLudo, 750); }
-  }, 260);
-}
-function aiLudo() {
-  if (ludoOver) return;
-  const r = Math.floor(Math.random()*6)+1; document.getElementById('dice-box').innerText = diceFaces[r-1];
-  if (p2 + r <= 21) p2 += r;
-  if (p2 === p1 && p2 < 21 && !safeTiles.includes(p2)) { p1 = 0; addMessage("Got you! Back to 0 ⚡😜","partner"); }
-  renderLudo();
-  if (p2 === 21) { document.getElementById('ludo-status').innerText = '⚡ Partner Won!'; ludoOver = true; return; }
-  if (r === 6) setTimeout(aiLudo, 650);
-  else { ludoTurn = 'ME'; document.getElementById('ludo-status').innerText = 'Your Turn! Tap Dice'; }
-}
-
-// 2. COUPLE SYNC (10-Question Round + Compatibility Score Ending)
-const qs = [
-  "Who takes longer to get ready before going out?",
-  "Who is more likely to fall asleep during a movie?",
-  "Who says 'Sorry' first after a silly argument?",
-  "Who orders more late-night food cravings?",
-  "Who is the better cook in the kitchen?",
-  "Who spends more time scrolling on their phone?",
-  "Who is more romantic when planning surprises?",
-  "Who is more likely to forget an important date?",
-  "Who gets jealous faster?",
-  "Who is more likely to cry during an emotional movie?",
-  "Who is the funnier one in the relationship?",
-  "Who takes better photos of the other?",
-  "Who is always running 10 minutes late?",
-  "Who gives better advice during stressful times?",
-  "Who is more addicted to tea or coffee?",
-  "Who makes the first move to resolve a fight?",
-  "Who is more likely to adopt a stray puppy?",
-  "Who controls the TV remote or playlist?",
-  "Who is the bigger overthinker?",
-  "Who would survive longer in a zombie apocalypse?",
-  "Who is more likely to impulse-buy something online?",
-  "Who remembers small details from past conversations?",
-  "Who is the better driver or navigator?",
-  "Who falls asleep faster at night?",
-  "Who loves the other a tiny bit more? 😉"
-];
-let deck = [], roundCount = 0, roundMatches = 0;
-
-function nextSyncQ() {
-  if (roundCount >= 10) {
-    const pct = roundMatches * 10;
-    const rank = pct >= 80 ? "Soulmate Sync! 💍🔥" : (pct >= 50 ? "Power Couple! ❤️⚡" : "Opposites Attract! 😂💕");
-    const bonus = pct >= 50 ? 300 : 100;
-    updateCoins(bonus);
-    addMessage(`🏆 Couple Sync Complete: ${pct}% (${rank}) +${bonus} 🪙`, "me");
-    document.getElementById('sync-question').innerHTML =
-      `<div style="font-size:26px;color:var(--gold);margin-bottom:6px;">${pct}% Match</div>` +
-      `<div style="font-size:15px;color:var(--pink);margin-bottom:8px;">${rank}</div>` +
-      `<div style="font-size:12px;color:#9aa0b8;">You matched ${roundMatches}/10 answers & won +${bonus} Gold Coins!</div>`;
-    document.querySelector('.sync-btns').innerHTML =
-      `<button class="sync-opt" style="background:linear-gradient(90deg,var(--pink),var(--cyan));color:#000;" onclick="restartSync()">🔄 Play Next 10 Questions</button>`;
-    return;
-  }
-  if (deck.length === 0) deck = [...qs].sort(() => Math.random() - 0.5);
-  roundCount++;
-  document.getElementById('sync-question').innerHTML =
-    `<div style="font-size:11px;color:var(--cyan);margin-bottom:6px;">QUESTION ${roundCount} OF 10</div>` + deck.pop();
-}
-
-function answerSync(c) {
-  const p = Math.random() > 0.35 ? c : (c === 'ME' ? 'PARTNER' : 'ME');
-  if (c === p) { roundMatches++; updateCoins(50); addMessage(`💘 Match (${roundCount}/10)! Both picked ${c} (+50 🪙)`, "me"); }
-  else { playTone(300, 'sawtooth', 0.12); addMessage(`😂 Mismatch (${roundCount}/10): I picked ${c}, partner picked ${p}`, "me"); }
-  nextSyncQ();
-}
-
-function restartSync() {
-  roundCount = 0; roundMatches = 0;
-  document.querySelector('.sync-btns').innerHTML =
-    `<button class="sync-opt" style="background:var(--pink);color:#fff;" onclick="answerSync('ME')">🙋‍♂️ Me</button>` +
-    `<button class="sync-opt" style="background:var(--cyan);color:#000;" onclick="answerSync('PARTNER')">👉 Partner</button>`;
-  nextSyncQ();
-}
-
-function answerSync(c) {
-  const p = Math.random() > 0.4 ? c : (c==='ME'?'PARTNER':'ME');
-  if (c === p) { updateCoins(100); addMessage("💘 MATCH! Both picked " + c + " (+100 🪙)","me"); }
-  else addMessage("😂 Mismatch! I picked " + c + ", partner picked " + p,"me");
-  nextSyncQ();
-}
-
-// 3. HEART VS BOLT
-let bState = Array(9).fill(''), gAct = true;
-function resetBoard() {
-  bState = Array(9).fill(''); gAct = true; document.getElementById('turn-status').innerText = "Your Turn (❤️)";
-  const b = document.getElementById('board'); b.innerHTML = '';
-  bState.forEach((_, i) => { const c = document.createElement('div'); c.className = 'cell'; c.onclick = () => makeMove(i); b.appendChild(c); });
-}
-function makeMove(i) {
-  if (!gAct || bState[i] !== '') return;
-  bState[i] = '❤️'; renderBoard();
-  if (checkWin('❤️')) { document.getElementById('turn-status').innerText = "Won +150 🪙"; updateCoins(150); gAct = false; return; }
-  if (!bState.includes('')) { document.getElementById('turn-status').innerText = "Draw!"; gAct = false; return; }
-  setTimeout(() => {
-    const emp = bState.map((v,idx)=>v===''?idx:null).filter(v=>v!==null);
-    bState[emp[Math.floor(Math.random()*emp.length)]] = '⚡'; renderBoard();
-    if (checkWin('⚡')) { document.getElementById('turn-status').innerText = "Partner Won!"; gAct = false; }
-  }, 400);
-}
-function renderBoard() { document.querySelectorAll('.cell').forEach((c,i) => c.innerText = bState[i]); }
-function checkWin(p) { return ['012','345','678','036','147','258','048','246'].some(s => [...s].every(ch => bState[+ch] === p)); }
-
-// 4. DOTS & BOXES
-let hL = [], vL = [], bxs = [], dTurn = 'ME', sc = {ME:0,AI:0};
-function initDAB() {
-  hL = Array(4).fill().map(()=>Array(3).fill(false)); vL = Array(3).fill().map(()=>Array(4).fill(false));
-  bxs = Array(3).fill().map(()=>Array(3).fill('')); dTurn = 'ME'; sc = {ME:0,AI:0}; renderDAB();
-}
-function renderDAB() {
-  document.getElementById('dab-score').innerText = `❤️ ${sc.ME} — ${sc.AI} ⚡`;
-  const g = document.getElementById('dab-grid'); g.innerHTML = '';
-  for (let r = 0; r < 4; r++) {
-    const hr = document.createElement('div'); hr.className = 'dab-row';
-    for (let c = 0; c < 3; c++) {
-      const d = document.createElement('div'); d.className = 'dot'; hr.appendChild(d);
-      const l = document.createElement('div'); l.className = 'h-line'+(hL[r][c]?' '+hL[r][c]:'');
-      l.onclick = () => clickDAB('H',r,c); hr.appendChild(l);
-    }
-    const ed = document.createElement('div'); ed.className = 'dot'; hr.appendChild(ed); g.appendChild(hr);
-    if (r < 3) {
-      const vr = document.createElement('div'); vr.className = 'dab-row';
-      for (let c = 0; c < 4; c++) {
-        const vl = document.createElement('div'); vl.className = 'v-line'+(vL[r][c]?' '+vL[r][c]:'');
-        vl.onclick = () => clickDAB('V',r,c); vr.appendChild(vl);
-        if (c < 3) { const bx = document.createElement('div'); bx.className = 'dab-box'; bx.innerText = bxs[r][c]; vr.appendChild(bx); }
-      }
-      g.appendChild(vr);
-    }
-  }
-}
-function clickDAB(t, r, c) {
-  if (dTurn !== 'ME' || (t==='H'?hL[r][c]:vL[r][c])) return;
-  if (t==='H') hL[r][c] = 'taken-me'; else vL[r][c] = 'taken-me';
-  if (!chkBox('❤️','ME')) { dTurn = 'AI'; renderDAB(); setTimeout(aiDAB,400); }
-  else { renderDAB(); if (sc.ME+sc.AI===9 && sc.ME>sc.AI) updateCoins(200); }
-}
-function aiDAB() {
-  let m = [];
-  for (let r=0;r<4;r++) for (let c=0;c<3;c++) if (!hL[r][c]) m.push(['H',r,c]);
-  for (let r=0;r<3;r++) for (let c=0;c<4;c++) if (!vL[r][c]) m.push(['V',r,c]);
-  if (!m.length) return;
-  const [t,r,c] = m[Math.floor(Math.random()*m.length)];
-  if (t==='H') hL[r][c] = 'taken-ai'; else vL[r][c] = 'taken-ai';
-  if (chkBox('⚡','AI')) { renderDAB(); if (sc.ME+sc.AI<9) setTimeout(aiDAB,400); }
-  else { dTurn = 'ME'; renderDAB(); }
-}
-function chkBox(ic, w) {
-  let s = false;
-  for (let r=0;r<3;r++) for (let c=0;c<3;c++) if (!bxs[r][c] && hL[r][c] && hL[r+1][c] && vL[r][c] && vL[r][c+1]) { bxs[r][c] = ic; sc[w]++; s = true; }
-  return s;
-}
-</script>
-</body>
-</html>
+<script>
+const DB_URL = "https://firebaseio.com";
+const urlParams = new URLSearchParams(window.location.search);
+let roomId = urlParams.get('room');
+let myRole = roomId ? 'GUEST' : 'HOST';
