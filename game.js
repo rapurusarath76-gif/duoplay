@@ -28,7 +28,7 @@ function watchAdReward() { alert("🎬 Ad Watched! +500 Gold Coins added."); upd
 function inviteWhatsApp() {
   const link = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
   const msg = encodeURIComponent(`Join my private DuoPlay room (#${roomId}) to chat & play games live together! ❤️🎲\n${link}`);
-  window.open(`https://wa.me{msg}`, '_blank');
+    window.open("https://whatsapp.com" + msg, "_blank");
 }
 function joinManualRoom() {
   const code = prompt("Enter 4-digit Room Code from your partner:");
