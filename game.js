@@ -1,4 +1,4 @@
-const DB_URL = "https://firebaseio.com";
+const DB_URL = "https://duoplay-10ad7-default-rtdb.firebaseio.com";
 const urlParams = new URLSearchParams(window.location.search);
 let roomId = urlParams.get('room');
 let myRole = roomId ? 'GUEST' : 'HOST';
@@ -163,4 +163,56 @@ function nextSyncQ() {
 function answerSync(c) {
   const p = Math.random() > 0.35 ? c : (c==='ME'?'PARTNER':'ME');
   if (c === p) { roundMatches++; updateCoins(50); pushChat(`💘 Q${roundCount}: ${myRole} picked ${c} — MATCH! (+50 🪙)`); }
-    
+  else pushChat(`😂 Q${roundCount}: ${myRole} picked ${c}`);
+  nextSyncQ();
+}
+
+let hL = [], vL = [], bxs = [], dTurn = 'ME', sc = {ME:0,AI:0};
+function initDAB() {
+  hL = Array(4).fill().map(()=>Array(3).fill(false)); vL = Array(3).fill().map(()=>Array(4).fill(false));
+  bxs = Array(3).fill().map(()=>Array(3).fill('')); dTurn = 'ME'; sc = {ME:0,AI:0}; renderDAB();
+}
+function renderDAB() {
+  document.getElementById('dab-score').innerText = `❤️ ${sc.ME} — ${sc.AI} ⚡`;
+  const g = document.getElementById('dab-grid'); g.innerHTML = '';
+  for (let r = 0; r < 4; r++) {
+    const hr = document.createElement('div'); hr.className = 'dab-row';
+    for (let c = 0; c < 3; c++) {
+      const d = document.createElement('div'); d.className = 'dot'; hr.appendChild(d);
+      const l = document.createElement('div'); l.className = 'h-line'+(hL[r][c]?' '+hL[r][c]:'');
+      l.onclick = () => clickDAB('H',r,c); hr.appendChild(l);
+    }
+    const ed = document.createElement('div'); ed.className = 'dot'; hr.appendChild(ed); g.appendChild(hr);
+    if (r < 3) {
+      const vr = document.createElement('div'); vr.className = 'dab-row';
+      for (let c = 0; c < 4; c++) {
+        const vl = document.createElement('div'); vl.className = 'v-line'+(vL[r][c]?' '+vL[r][c]:'');
+        vl.onclick = () => clickDAB('V',r,c); vr.appendChild(vl);
+        if (c < 3) { const bx = document.createElement('div'); bx.className = 'dab-box'; bx.innerText = bxs[r][c]; vr.appendChild(bx); }
+      }
+      g.appendChild(vr);
+    }
+  }
+}
+function clickDAB(t, r, c) {
+  if (dTurn !== 'ME' || (t==='H'?hL[r][c]:vL[r][c])) return;
+  if (t==='H') hL[r][c] = 'taken-me'; else vL[r][c] = 'taken-me';
+  if (!chkBox('❤️','ME')) { dTurn = 'AI'; renderDAB(); setTimeout(aiDAB,400); }
+  else { renderDAB(); if (sc.ME+sc.AI===9 && sc.ME>sc.AI) updateCoins(200); }
+}
+function aiDAB() {
+  let m = [];
+  for (let r=0;r<4;r++) for (let c=0;c<3;c++) if (!hL[r][c]) m.push(['H',r,c]);
+  for (let r=0;r<3;r++) for (let c=0;c<4;c++) if (!vL[r][c]) m.push(['V',r,c]);
+  if (!m.length) return;
+  const [t,r,c] = m[Math.floor(Math.random()*m.length)];
+  if (t==='H') hL[r][c] = 'taken-ai'; else vL[r][c] = 'taken-ai';
+  if (chkBox('⚡','AI')) { renderDAB(); if (sc.ME+sc.AI<9) setTimeout(aiDAB,400); }
+  else { dTurn = 'ME'; renderDAB(); }
+}
+function chkBox(ic, w) {
+  let s = false;
+  for (let r=0;r<3;r++) for (let c=0;c<3;c++) if (!bxs[r][c] && hL[r][c] && hL[r+1][c] && vL[r][c] && vL[r][c+1]) { bxs[r][c] = ic; sc[w]++; s = true; }
+  return s;
+}
+syncRoomState();
