@@ -26,10 +26,13 @@ function updateCoins(amt) {
 function watchAdReward() { alert("🎬 Ad Watched! +500 Gold Coins added."); updateCoins(500); }
 function inviteWhatsApp() {
   var link = window.location.origin + window.location.pathname + "?room=" + roomId;
-  var msg = encodeURIComponent("Join my private DuoPlay room (#" + roomId + ") to chat & play games live together!\n" + link);
-  window.open("https://whatsapp.com" + msg, "_blank");
+  var text = "Join my private DuoPlay room (#" + roomId + ") to chat & play games live together! " + link;
+  if (navigator.share) {
+    navigator.share({ title: "DuoPlay Invite", text: text });
+  } else {
+    window.location.href = "whatsapp://send?text=" + encodeURIComponent(text);
+  }
 }
-
 function joinManualRoom() {
   const code = prompt("Enter 4-digit Room Code from your partner:");
   if (code && code.trim()) window.location.href = `${window.location.origin}${window.location.pathname}?room=${code.replace('#','').trim()}`;
